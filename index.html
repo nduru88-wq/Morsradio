@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Retro DR Radio - LED Display</title>
+
+<style>
+/* SIDE */
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:system-ui,sans-serif;
+  background:#1a120b;
+  color:#f5efe6;
+  overflow:hidden;
+}
+
+/* WRAPPER – perfekt centrering */
+.radio-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100vw;
+  height:100vh;
+}
+
+/* RADIO KABINET */
+.radio{
+  position: relative;
+  width:min(1200px,97vw);
+  padding:46px;
+  border-radius:40px;
+  background:linear-gradient(180deg,#4b2e1a,#2f1a0e);
+  border:6px solid #2a160a;
+  box-shadow:
+    inset 0 0 0 3px #8b5a2b,
+    0 40px 80px rgba(0,0,0,.7);
+
+  /* HALV STØRRELSE */
+  transform:scale(0.5);
+  transform-origin:center center;
+}
+
+/* FØDDER */
+.radio::after, .radio::before{
+  content:'';
+  position:absolute;
+  bottom:-18px;
+  width:36px;
+  height:18px;
+  border-radius:50%;
+  background:#3b2413;
+}
+.radio::before{ left:40px; }
+.radio::after{ right:40px; }
+
+/* DISPLAY – FAST HØJDE, SÅ DET IKKE HOPPER */
+.display{
+  background:#020800;
+  border-radius:22px;
+  padding:26px;
+  font-size:46px;                 /* FAST størrelse */
+  line-height:1;                  /* stabil */
+  height:calc(46px + 26px*2);     /* fast højde baseret på font + padding */
+  display:flex;                   /* center teksten */
+  align-items:center;
+  justify-content:center;
+
+  text-align:center;
+  margin-bottom:34px;
+  border:3px solid #8b5a2b;
+  font-family:'Courier New', monospace;
+  letter-spacing:2px;
+
+  transition:color .35s ease, text-shadow .35s ease, filter .35s ease;
+}
+
+/* TÆNDT – BLÅ LED */
+.display.on{
+  color:var(--led,#00ccff);
+  text-shadow:
+    0 0 10px var(--led,#00ccff),
+    0 0 20px var(--led,#00ccff),
+    0 0 32px rgba(0,204,255,.55);
+  animation:ledPulse 2.6s ease-in-out infinite;
+}
+
+/* SLUKKET/STOPPET/TRYK IGEN – GRÅ/HVID, SAMME FONT-SIZE */
+.display.off{
+  color:#707070;
+  text-shadow:0 0 6px rgba(255,255,255,.15);
+  filter:brightness(.95);
+}
+
+/* POWER OFF – samme størrelse som normalt, men hvidere */
+.display.poweroff{
+  color:#d8d8d8;
+  text-shadow:
+    0 0 8px rgba(255,255,255,.20),
+    0 0 2px rgba(255,255,255,.15);
+  filter:brightness(1.03);
+  /* ingen font-size ændring her! */
+}
+
+@keyframes ledPulse{
+  0%,100%{ filter:brightness(1.05); }
+  50%{ filter:brightness(1.25); }
+}
+
+/* KANALKANPPER */
+.buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:30px;
+}
+
+button{
+  font-size:44px;
+  padding:40px 0;
+  border-radius:28px;
+  border:3px solid #8b5a2b;
+  background:linear-gradient(180deg,#c77c3c,#8b5a2b);
+  color:#f5efe6;
+  cursor:pointer;
+}
+
+button.active{
+  background:linear-gradient(180deg,#ffd966,#b38f1d);
+  color:#120a05;
+}
+
+/* MIDTE */
+.center-row{
+  margin-top:40px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:28px;
+  align-items:center;
+}
+
+/* HØJTTALER */
+.speaker{
+  height:110px;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 2px 2px,#00000055 20%,transparent 21%) 0 0/10px 10px,
+    linear-gradient(180deg,#5a3a1e,#3b2413);
+  border:3px solid #8b5a2b;
+}
+
+/* SLUK / TÆND – FAST STØRRELSE SÅ DEN IKKE HOPPER */
+.mute{
+  font-size:48px;          /* samme font uanset tekst */
+  width:240px;             /* fast bredde */
+  height:140px;            /* fast højde */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border:none;
+  border-radius:30px;
+  color:#fff;
+  cursor:pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,.4);
+}
+
+.mute.offstate{
+  background:linear-gradient(180deg,#ff4c4c,#b31f1f);
+}
+
+.mute.onstate{
+  background:linear-gradient(180deg,#39d98a,#0e8a4f);
+}
+
+/* VOLUME */
+.volume{
+  margin-top:46px;
+}
+
+.volume-header{
+  display:flex;
+  justify-content:space-between;
+  font-size:34px;
+  margin-bottom:22px;
+}
+
+input[type=range]{
+  width:100%;
+  height:40px;
+  -webkit-appearance:none;
+  background:#3b2413;
+  border-radius:20px;
+  border:3px solid #8b5a2b;
+}
+
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:136px;
+  height:136px;
+  border-radius:50%;
+  background:linear-gradient(180deg,#ffd966,#b38f1d);
+  border:4px solid #2a160a;
+}
+
+audio{display:none;}
+</style>
+</head>
+
+<body>
+
+<div class="radio-wrap">
+  <div class="radio">
+
+    <div class="display off" id="display">KLAR</div>
+
+    <div class="buttons">
+      <button id="btnP1">P1</button>
+      <button id="btnP2">P2</button>
+      <button id="btnP5">P5 Nordjylland</button>
+    </div>
+
+    <div class="center-row">
+      <div class="speaker"></div>
+      <button class="mute offstate" id="btnMute">SLUK</button>
+      <div class="speaker"></div>
+    </div>
+
+    <div class="volume">
+      <div class="volume-header">
+        <span>Lydstyrke</span>
+        <span id="volText">60</span>
+      </div>
+      <input id="vol" type="range" min="0" max="100" value="60">
+    </div>
+
+    <audio id="audio"></audio>
+  </div>
+</div>
+
+<script>
+const audio = document.getElementById("audio");
+const display = document.getElementById("display");
+const btnMute = document.getElementById("btnMute");
+
+const streams = {
+  p1: "https://live-icy.dr.dk/A/A03H.mp3",
+  p2: "https://live-icy.dr.dk/A/A04H.mp3",
+  p5: "http://live-icy.gss.dr.dk/A/A11L.mp3"
+};
+
+const led = {
+  p1: "#00ccff",
+  p2: "#2e7bff",
+  p5: "#19d2ff"
+};
+
+let poweredOff = false;
+
+function setDisplay(state, text, channel){
+  display.textContent = text;
+  display.className = "display " + state;
+  if(state === "on"){
+    display.style.setProperty("--led", led[channel] || "#00ccff");
+  }else{
+    display.style.removeProperty("--led");
+  }
+}
+
+async function play(ch){
+  poweredOff = false;
+
+  btnMute.textContent = "SLUK";
+  btnMute.className = "mute offstate";
+
+  audio.src = streams[ch];
+  try{
+    await audio.play();
+    setDisplay("on", "DR " + ch.toUpperCase(), ch);
+  }catch{
+    setDisplay("off", "TRYK IGEN");
+  }
+}
+
+btnP1.onclick = () => play("p1");
+btnP2.onclick = () => play("p2");
+btnP5.onclick = () => play("p5");
+
+btnMute.onclick = () => {
+  if(poweredOff){
+    play("p1");
+    return;
+  }
+  audio.pause();
+  poweredOff = true;
+
+  btnMute.textContent = "TÆND";
+  btnMute.className = "mute onstate";
+
+  setDisplay("poweroff", "SLUKKET");
+};
+
+/* Volume */
+const vol = document.getElementById("vol");
+const volText = document.getElementById("volText");
+
+vol.oninput = e => {
+  audio.volume = e.target.value / 100;
+  volText.textContent = e.target.value;
+};
+
+audio.volume = 0.6;
+</script>
+
+</body>
+</html>
