@@ -60,10 +60,10 @@ body{
   background:#020800;
   border-radius:22px;
   padding:26px;
-  font-size:46px;                 /* FAST størrelse */
-  line-height:1;                  /* stabil */
-  height:calc(46px + 26px*2);     /* fast højde baseret på font + padding */
-  display:flex;                   /* center teksten */
+  font-size:46px;
+  line-height:1;
+  height:calc(46px + 26px*2);
+  display:flex;
   align-items:center;
   justify-content:center;
 
@@ -86,21 +86,20 @@ body{
   animation:ledPulse 2.6s ease-in-out infinite;
 }
 
-/* SLUKKET/STOPPET/TRYK IGEN – GRÅ/HVID, SAMME FONT-SIZE */
+/* SLUKKET/STOPPET/TRYK IGEN – GRÅ/HVID */
 .display.off{
   color:#707070;
   text-shadow:0 0 6px rgba(255,255,255,.15);
   filter:brightness(.95);
 }
 
-/* POWER OFF – samme størrelse som normalt, men hvidere */
+/* POWER OFF */
 .display.poweroff{
   color:#d8d8d8;
   text-shadow:
     0 0 8px rgba(255,255,255,.20),
     0 0 2px rgba(255,255,255,.15);
   filter:brightness(1.03);
-  /* ingen font-size ændring her! */
 }
 
 @keyframes ledPulse{
@@ -149,11 +148,11 @@ button.active{
   border:3px solid #8b5a2b;
 }
 
-/* SLUK / TÆND – FAST STØRRELSE SÅ DEN IKKE HOPPER */
+/* SLUK / TÆND */
 .mute{
-  font-size:48px;          /* samme font uanset tekst */
-  width:240px;             /* fast bredde */
-  height:140px;            /* fast højde */
+  font-size:48px;
+  width:240px;
+  height:140px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -246,7 +245,8 @@ const btnMute = document.getElementById("btnMute");
 const streams = {
   p1: "https://live-icy.dr.dk/A/A03H.mp3",
   p2: "https://live-icy.dr.dk/A/A04H.mp3",
-  p5: "http://live-icy.gss.dr.dk/A/A11L.mp3"
+  // RETTET: korrekt P5 Nordjylland + HTTPS (så den ikke bliver blokeret)
+  p5: "https://live-icy.dr.dk/A/A18H.mp3"
 };
 
 const led = {
@@ -273,7 +273,10 @@ async function play(ch){
   btnMute.textContent = "SLUK";
   btnMute.className = "mute offstate";
 
+  audio.pause();
   audio.src = streams[ch];
+  audio.load(); // lille robustness-ting
+
   try{
     await audio.play();
     setDisplay("on", "DR " + ch.toUpperCase(), ch);
