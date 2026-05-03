@@ -2,12 +2,10 @@
 <html lang="da">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1a120b">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-<link rel="manifest" href="manifest.json">
 
 <title>Retro DR Radio</title>
 
@@ -15,6 +13,9 @@
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
 }
 
 html, body{
@@ -26,7 +27,7 @@ html, body{
   background:#1a120b;
   color:#f5efe6;
   touch-action:manipulation;
-  user-select:none;
+  overscroll-behavior:none;
 }
 
 .radio-wrap{
@@ -66,8 +67,8 @@ html, body{
   background:#3b2413;
 }
 
-.radio::before{ left:40px; }
-.radio::after{ right:40px; }
+.radio::before{left:40px;}
+.radio::after{right:40px;}
 
 .display{
   background:#020800;
@@ -84,7 +85,6 @@ html, body{
   border:3px solid #8b5a2b;
   font-family:"Courier New",monospace;
   letter-spacing:2px;
-  transition:color .35s ease,text-shadow .35s ease,filter .35s ease;
 }
 
 .display.on{
@@ -98,21 +98,15 @@ html, body{
 
 .display.off{
   color:#707070;
-  text-shadow:0 0 6px rgba(255,255,255,.15);
-  filter:brightness(.95);
 }
 
 .display.poweroff{
   color:#d8d8d8;
-  text-shadow:
-    0 0 8px rgba(255,255,255,.20),
-    0 0 2px rgba(255,255,255,.15);
-  filter:brightness(1.03);
 }
 
 @keyframes ledPulse{
-  0%,100%{ filter:brightness(1.05); }
-  50%{ filter:brightness(1.25); }
+  0%,100%{filter:brightness(1.05);}
+  50%{filter:brightness(1.25);}
 }
 
 .buttons{
@@ -129,6 +123,7 @@ button{
   background:linear-gradient(180deg,#c77c3c,#8b5a2b);
   color:#f5efe6;
   cursor:pointer;
+  touch-action:manipulation;
 }
 
 button:active{
@@ -168,7 +163,6 @@ button.active{
   border-radius:30px;
   color:#fff;
   cursor:pointer;
-  box-shadow:0 4px 10px rgba(0,0,0,.4);
 }
 
 .mute.offstate{
@@ -215,11 +209,10 @@ audio{
 }
 
 @media (orientation:portrait){
-  :root{ --radio-scale:0.78; }
+  :root{--radio-scale:0.78;}
 
   .radio{
     padding:40px;
-    border-radius:38px;
   }
 
   .buttons{
@@ -258,11 +251,11 @@ audio{
 }
 
 @media (orientation:landscape){
-  :root{ --radio-scale:0.92; }
+  :root{--radio-scale:0.92;}
 }
 
 @media (max-height:720px){
-  :root{ --radio-scale:0.80; }
+  :root{--radio-scale:0.80;}
 }
 </style>
 </head>
@@ -295,16 +288,12 @@ audio{
     </div>
 
     <audio id="audio" playsinline></audio>
+
   </div>
 </div>
 
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js");
-  });
-}
-
+/* ========= FULLSCREEN / KIOSK ========= */
 let isFullScreen = false;
 
 function goFullScreen(){
@@ -324,6 +313,53 @@ function goFullScreen(){
 document.addEventListener("click", goFullScreen, { once:true });
 document.addEventListener("touchstart", goFullScreen, { once:true });
 
+document.addEventListener("fullscreenchange", () => {
+  isFullScreen = !!document.fullscreenElement;
+});
+
+document.addEventListener("webkitfullscreenchange", () => {
+  isFullScreen = !!document.webkitFullscreenElement;
+});
+
+/* Bloker højreklik / lang menu */
+document.addEventListener("contextmenu", e => {
+  e.preventDefault();
+});
+
+/* Bloker drag */
+document.addEventListener("dragstart", e => {
+  e.preventDefault();
+});
+
+/* Bloker tekstmarkering */
+document.addEventListener("selectstart", e => {
+  e.preventDefault();
+});
+
+/* ========= ZOOM LOCK ========= */
+document.addEventListener("gesturestart", e => {
+  e.preventDefault();
+});
+
+document.addEventListener("touchmove", e => {
+  if(e.touches.length > 1){
+    e.preventDefault();
+  }
+}, { passive:false });
+
+let lastTouchEnd = 0;
+
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+
+  if(now - lastTouchEnd <= 300){
+    e.preventDefault();
+  }
+
+  lastTouchEnd = now;
+}, false);
+
+/* ========= RADIO ========= */
 const audio = document.getElementById("audio");
 const display = document.getElementById("display");
 const btnMute = document.getElementById("btnMute");
@@ -357,6 +393,12 @@ function setDisplay(state, text, channel){
   }
 }
 
+function setActiveButton(ch){
+  btnP1.classList.toggle("active", ch === "p1");
+  btnP2.classList.toggle("active", ch === "p2");
+  btnP5.classList.toggle("active", ch === "p5");
+}
+
 async function play(ch){
   poweredOff = false;
   lastChannel = ch;
@@ -375,12 +417,6 @@ async function play(ch){
   }catch{
     setDisplay("off", "TRYK IGEN");
   }
-}
-
-function setActiveButton(ch){
-  btnP1.classList.toggle("active", ch === "p1");
-  btnP2.classList.toggle("active", ch === "p2");
-  btnP5.classList.toggle("active", ch === "p5");
 }
 
 btnP1.onclick = () => play("p1");
@@ -403,6 +439,7 @@ btnMute.onclick = () => {
   setDisplay("poweroff", "SLUKKET");
 };
 
+/* ========= VOLUME ========= */
 const vol = document.getElementById("vol");
 const volText = document.getElementById("volText");
 
@@ -410,6 +447,7 @@ function applyVolumeFromSlider(value0to100){
   const v = value0to100 / 100;
   const boost = 1.35;
   const shaped = Math.pow(v, 0.55);
+
   audio.volume = Math.min(1, shaped * boost);
 }
 
